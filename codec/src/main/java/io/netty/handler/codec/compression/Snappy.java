@@ -16,7 +16,10 @@
 package io.netty.handler.codec.compression;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.util.concurrent.FastThreadLocal;
 import io.netty.util.internal.MathUtil;
+
+import java.util.Arrays;
 
 /**
  * Uncompresses an input {@link ByteBuf} encoded with Snappy compression into an
@@ -38,6 +41,9 @@ public final class Snappy {
     private static final int COPY_1_BYTE_OFFSET = 1;
     private static final int COPY_2_BYTE_OFFSET = 2;
     private static final int COPY_4_BYTE_OFFSET = 3;
+
+    // Hash table used to compression, shared between subsequent call to .encode()
+    private static final FastThreadLocal<short[]> HASH_TABLE = new FastThreadLocal<short[]>();
 
     private State state = State.READING_PREAMBLE;
     private byte tag;
@@ -160,8 +166,15 @@ public final class Snappy {
      * @return An appropriately sized empty hashtable
      */
     private static short[] getHashTable(int inputSize) {
-        int hashTableSize = MathUtil.findNextPositivePowerOfTwo(inputSize);
-        return new short[Math.min(hashTableSize, MAX_HT_SIZE)];
+        short[] hashTable = HASH_TABLE.get();
+        if(hashTable == null) {
+            int hashTableSize = MathUtil.findNextPositivePowerOfTwo(inputSize);
+            hashTable = new short[Math.min(hashTableSize, MAX_HT_SIZE)];
+            HASH_TABLE.set(hashTable);
+        }
+        // reset byte array with 0
+        Arrays.fill(hashTable, (short) 0);
+        return hashTable;
     }
 
     /**
