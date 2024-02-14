@@ -44,16 +44,30 @@ public final class Snappy {
 
     // Hash table used to compression, shared between subsequent call to .encode()
     private static final FastThreadLocal<short[]> HASH_TABLE = new FastThreadLocal<short[]>();
+    private final HashType hashType;
 
     private State state = State.READING_PREAMBLE;
     private byte tag;
     private int written;
+
+    enum HashType {
+        NEW_ARRAY,
+        FAST_THREAD_LOCAL_ARRAY_FILL
+    }
 
     private enum State {
         READING_PREAMBLE,
         READING_TAG,
         READING_LITERAL,
         READING_COPY
+    }
+
+    public Snappy() {
+        this(HashType.FAST_THREAD_LOCAL_ARRAY_FILL);
+    }
+
+    Snappy(HashType hashType) {
+        this.hashType = hashType;
     }
 
     public void reset() {
@@ -77,7 +91,18 @@ public final class Snappy {
         int inIndex = in.readerIndex();
         final int baseIndex = inIndex;
 
-        final short[] table = getHashTable(length);
+        final short[] table;
+        switch (hashType) {
+            case FAST_THREAD_LOCAL_ARRAY_FILL:
+                table = getHashTableFastThreadLocalArrayFill(length);
+                break;
+            case NEW_ARRAY:
+                table = getHashTableNewArray(length);
+                break;
+            default:
+                throw new RuntimeException("Need hash table type");
+        }
+
         final int shift = Integer.numberOfLeadingZeros(table.length) + 1;
 
         int nextEmit = inIndex;
@@ -165,7 +190,18 @@ public final class Snappy {
      * @param inputSize The size of our input, ie. the number of bytes we need to encode
      * @return An appropriately sized empty hashtable
      */
-    private static short[] getHashTable(int inputSize) {
+    private static short[] getHashTableNewArray(int inputSize) {
+        int hashTableSize = MathUtil.findNextPositivePowerOfTwo(inputSize);
+        return new short[Math.min(hashTableSize, MAX_HT_SIZE)];
+    }
+
+    /**
+     * Creates an appropriately sized hashtable for the given input size
+     *
+     * @param inputSize The size of our input, ie. the number of bytes we need to encode
+     * @return An appropriately sized empty hashtable
+     */
+    private static short[] getHashTableFastThreadLocalArrayFill(int inputSize) {
         short[] hashTable = HASH_TABLE.get();
         if(hashTable == null) {
             int hashTableSize = MathUtil.findNextPositivePowerOfTwo(inputSize);
