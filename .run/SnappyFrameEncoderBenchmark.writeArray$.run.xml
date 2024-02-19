@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="SnappyFrameEncoderBenchmark.writeArray$" type="jmh-id" vm-parameters="" program-parameters="-prof &quot;async:output=flamegraph;dir=/tmp;libPath=$USER_HOME$/async-profiler/build/libasyncProfiler.so&quot; io.netty.microbench.snappy.SnappyFrameEncoderBenchmark.writeArray$" working-dir="$MODULE_WORKING_DIR$" benchmark-type="METHOD" benchmark-class="io.netty.microbench.snappy.SnappyFrameEncoderBenchmark" isAlternativeJrePathEnabled="false">
+    <module name="netty-microbench" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

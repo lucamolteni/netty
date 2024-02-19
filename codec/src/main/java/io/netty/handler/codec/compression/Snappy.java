@@ -44,13 +44,13 @@ public final class Snappy {
 
     // Hash table used to compression, shared between subsequent call to .encode()
     private static final FastThreadLocal<short[]> HASH_TABLE = new FastThreadLocal<short[]>();
-    private final HashType hashType;
+    private HashType hashType = HashType.FAST_THREAD_LOCAL_ARRAY_FILL;
 
     private State state = State.READING_PREAMBLE;
     private byte tag;
     private int written;
 
-    enum HashType {
+    public enum HashType {
         NEW_ARRAY,
         FAST_THREAD_LOCAL_ARRAY_FILL
     }
@@ -62,11 +62,8 @@ public final class Snappy {
         READING_COPY
     }
 
-    public Snappy() {
-        this(HashType.FAST_THREAD_LOCAL_ARRAY_FILL);
-    }
 
-    Snappy(HashType hashType) {
+    public void setHashType(HashType hashType) {
         this.hashType = hashType;
     }
 
@@ -190,7 +187,7 @@ public final class Snappy {
      * @param inputSize The size of our input, ie. the number of bytes we need to encode
      * @return An appropriately sized empty hashtable
      */
-    private static short[] getHashTableNewArray(int inputSize) {
+    public static short[] getHashTableNewArray(int inputSize) {
         int hashTableSize = MathUtil.findNextPositivePowerOfTwo(inputSize);
         return new short[Math.min(hashTableSize, MAX_HT_SIZE)];
     }
@@ -201,7 +198,7 @@ public final class Snappy {
      * @param inputSize The size of our input, ie. the number of bytes we need to encode
      * @return An appropriately sized empty hashtable
      */
-    private static short[] getHashTableFastThreadLocalArrayFill(int inputSize) {
+    public static short[] getHashTableFastThreadLocalArrayFill(int inputSize) {
         short[] hashTable = HASH_TABLE.get();
         if(hashTable == null) {
             int hashTableSize = MathUtil.findNextPositivePowerOfTwo(inputSize);

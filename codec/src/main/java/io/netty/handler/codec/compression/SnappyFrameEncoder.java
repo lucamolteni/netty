@@ -70,6 +70,10 @@ public class SnappyFrameEncoder extends MessageToByteEncoder<ByteBuf> {
         this.sliceSize = sliceSize;
     }
 
+    public void setHashType(Snappy.HashType hashType) {
+        snappy.setHashType(hashType);
+    }
+
     private final Snappy snappy = new Snappy();
     private boolean started;
     private final int sliceSize;
