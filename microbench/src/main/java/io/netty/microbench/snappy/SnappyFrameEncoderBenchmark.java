@@ -36,7 +36,7 @@ import java.util.Random;
 public class SnappyFrameEncoderBenchmark extends AbstractMicrobenchmark {
     private EmbeddedChannel embeddedChannel;
 
-    @Param({"FAST_THREAD_LOCAL_ARRAY_FILL", "NEW_ARRAY", "FAST_THREAD_LOCAL_SPECIAL_FILL"})
+    @Param({"FAST_THREAD_LOCAL_ARRAY_FILL", "NEW_ARRAY"})
     public Snappy.HashType hashType;
 
     @Param({"true"})
@@ -49,7 +49,7 @@ public class SnappyFrameEncoderBenchmark extends AbstractMicrobenchmark {
     @Setup(Level.Iteration)
     public void setup() {
         ByteBufAllocator allocator = UnpooledByteBufAllocator.DEFAULT;
-        int bufferSizeInBytes = 100 * 1024 * 1024; // 100 MB
+        int bufferSizeInBytes = 100;
         buffer = allocator.buffer(bufferSizeInBytes);
 
         Random random = new Random(5323211032315942961L);
@@ -67,15 +67,15 @@ public class SnappyFrameEncoderBenchmark extends AbstractMicrobenchmark {
 
         embeddedChannel = new EmbeddedChannel(encoder);
     }
+    @Benchmark
+    public void writeArray() {
+        embeddedChannel.writeOutbound(buffer.retain());
+//        System.out.println(buffer.refCnt());
+    }
 
     @TearDown(Level.Trial)
     public void teardown() {
         buffer.release();
         buffer = null;
-    }
-
-    @Benchmark
-    public void writeArray() {
-        embeddedChannel.writeOutbound(buffer.retain());
     }
 }

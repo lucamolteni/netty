@@ -36,11 +36,7 @@ public class SnappyDirectBenchmark extends AbstractMicrobenchmark {
 
     @Param({"FAST_THREAD_LOCAL_ARRAY_FILL", "NEW_ARRAY"})
     public Snappy.HashType hashType;
-
-    @Param({"100000"})
-    public int contentSize;
     private ByteBuf buffer;
-    private String input;
     private Snappy snappy;
     private ByteBuf in;
     private ByteBuf out;
@@ -48,7 +44,7 @@ public class SnappyDirectBenchmark extends AbstractMicrobenchmark {
     @Setup(Level.Iteration)
     public void setup() throws UnsupportedEncodingException {
         ByteBufAllocator allocator = UnpooledByteBufAllocator.DEFAULT;
-        int bufferSizeInBytes = 100 * 1024 * 1024; // 100 MB
+        int bufferSizeInBytes = 16383; // 100 bytes
         buffer = allocator.buffer(bufferSizeInBytes);
 
         snappy = new Snappy();
@@ -61,7 +57,7 @@ public class SnappyDirectBenchmark extends AbstractMicrobenchmark {
 
 
         in = Unpooled.wrappedBuffer(randomBytes);
-
+        out = Unpooled.buffer();
     }
 
     @TearDown(Level.Trial)
@@ -74,7 +70,7 @@ public class SnappyDirectBenchmark extends AbstractMicrobenchmark {
 
     @Benchmark
     public ByteBuf encode() {
-        out = Unpooled.buffer();
+        // Make it run inside a FastThread
         snappy.encode(in, out, in.readableBytes());
         return out;
     }

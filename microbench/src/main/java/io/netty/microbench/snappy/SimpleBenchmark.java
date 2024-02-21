@@ -15,19 +15,19 @@
  */
 package io.netty.microbench.snappy;
 
-import io.netty.handler.codec.compression.Snappy;
 import io.netty.microbench.util.AbstractMicrobenchmark;
 import org.openjdk.jmh.annotations.*;
+
+import java.util.Arrays;
 
 @State(Scope.Benchmark)
 @Fork(1)
 @Threads(1)
 @Warmup(iterations = 5)
 @Measurement(iterations = 5)
-public class SnappyNewHashTableBenchmark extends AbstractMicrobenchmark {
+public class SimpleBenchmark extends AbstractMicrobenchmark {
 
-    @Param({"16384"})
-    public int contentSize;
+    public short[] data;
 
     @Setup(Level.Trial)
     public void setup() {
@@ -36,12 +36,9 @@ public class SnappyNewHashTableBenchmark extends AbstractMicrobenchmark {
 
     @Benchmark
     public short[] benchmarkFastThreadLocalArrayFill() {
-        // This should run inside a FastThread
-        return Snappy.getHashTableFastThreadLocalArrayFill(contentSize);
+        data = new short[16384];
+        return data;
     }
 
-    @Benchmark
-    public short[] benchmarkNewArray() {
-        return Snappy.getHashTableNewArray(contentSize);
-    }
+
 }
