@@ -88,18 +88,21 @@ public final class Snappy {
         final int baseIndex = inIndex;
 
         final short[] table;
+        int hashTableSize;
         switch (hashType) {
             case FAST_THREAD_LOCAL_ARRAY_FILL:
-                table = getHashTableFastThreadLocalArrayFill(length);
+                hashTableSize = Math.min(MathUtil.findNextPositivePowerOfTwo(length), MAX_HT_SIZE);
+                table = getHashTableFastThreadLocalArrayFill(hashTableSize);
                 break;
             case NEW_ARRAY:
                 table = getHashTableNewArray(length);
+                hashTableSize = table.length;
                 break;
             default:
                 throw new RuntimeException("Need hash table type");
         }
 
-        final int shift = Integer.numberOfLeadingZeros(table.length) + 1;
+        final int shift = Integer.numberOfLeadingZeros(hashTableSize) + 1;
 
         int nextEmit = inIndex;
 
@@ -194,18 +197,17 @@ public final class Snappy {
     /**
      * Creates an appropriately sized hashtable for the given input size
      *
-     * @param inputSize The size of our input, ie. the number of bytes we need to encode
      * @return An appropriately sized empty hashtable
+     * @param hashTableSize
      */
-    public static short[] getHashTableFastThreadLocalArrayFill(int inputSize) {
+    public static short[] getHashTableFastThreadLocalArrayFill(int hashTableSize) {
         short[] hashTable = HASH_TABLE.get();
         if (hashTable == null) {
-            int hashTableSize = MathUtil.findNextPositivePowerOfTwo(inputSize);
-            hashTable = new short[Math.min(hashTableSize, MAX_HT_SIZE)];
+            hashTable = new short[MAX_HT_SIZE];
             HASH_TABLE.set(hashTable);
         }
-        // reset byte array with 0
-        Arrays.fill(hashTable, (short) 0);
+
+        Arrays.fill(hashTable, 0, hashTableSize, (short) 0);
         return hashTable;
     }
 
