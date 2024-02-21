@@ -19,10 +19,19 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
-import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.compression.Snappy;
 import io.netty.microbench.util.AbstractMicrobenchmark;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Param;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.TearDown;
+import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.Warmup;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Random;
@@ -54,7 +63,6 @@ public class SnappyDirectBenchmark extends AbstractMicrobenchmark {
         byte[] randomBytes = new byte[buffer.writableBytes()];
         random.nextBytes(randomBytes);
         buffer.writeBytes(randomBytes);
-
 
         in = Unpooled.wrappedBuffer(randomBytes);
         out = Unpooled.buffer();

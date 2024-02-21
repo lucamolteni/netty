@@ -62,7 +62,6 @@ public final class Snappy {
         READING_COPY
     }
 
-
     public void setHashType(HashType hashType) {
         this.hashType = hashType;
     }
@@ -200,7 +199,7 @@ public final class Snappy {
      */
     public static short[] getHashTableFastThreadLocalArrayFill(int inputSize) {
         short[] hashTable = HASH_TABLE.get();
-        if(hashTable == null) {
+        if (hashTable == null) {
             int hashTableSize = MathUtil.findNextPositivePowerOfTwo(inputSize);
             hashTable = new short[Math.min(hashTableSize, MAX_HT_SIZE)];
             HASH_TABLE.set(hashTable);

@@ -17,15 +17,23 @@ package io.netty.microbench.snappy;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.compression.Snappy;
 import io.netty.handler.codec.compression.SnappyFrameEncoder;
 import io.netty.microbench.util.AbstractMicrobenchmark;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Param;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.TearDown;
+import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.Warmup;
 
-import java.util.Arrays;
 import java.util.Random;
 
 @State(Scope.Benchmark)
@@ -67,6 +75,7 @@ public class SnappyFrameEncoderBenchmark extends AbstractMicrobenchmark {
 
         embeddedChannel = new EmbeddedChannel(encoder);
     }
+
     @Benchmark
     public void writeArray() {
         embeddedChannel.writeOutbound(buffer.retain());

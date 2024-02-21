@@ -16,7 +16,15 @@
 package io.netty.microbench.snappy;
 
 import io.netty.microbench.util.AbstractMicrobenchmark;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.Warmup;
 
 import java.util.Arrays;
 
@@ -31,7 +39,6 @@ public class SimpleBenchmark extends AbstractMicrobenchmark {
 
     @Setup(Level.Trial)
     public void setup() {
-
     }
 
     @Benchmark
@@ -39,6 +46,4 @@ public class SimpleBenchmark extends AbstractMicrobenchmark {
         data = new short[16384];
         return data;
     }
-
-
 }

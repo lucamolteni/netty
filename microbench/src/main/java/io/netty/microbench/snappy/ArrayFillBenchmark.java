@@ -16,7 +16,15 @@
 package io.netty.microbench.snappy;
 
 import io.netty.microbench.util.AbstractMicrobenchmark;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.Warmup;
 
 import java.util.Arrays;
 
@@ -26,7 +34,6 @@ import java.util.Arrays;
 @Warmup(iterations = 5)
 @Measurement(iterations = 5)
 public class ArrayFillBenchmark extends AbstractMicrobenchmark {
-
 
     public short[] data;
 
@@ -41,20 +48,18 @@ public class ArrayFillBenchmark extends AbstractMicrobenchmark {
         return data;
     }
 
-
     @Benchmark
     public short[] benchmarkFastThreadLocalSpecialFill() {
         int len = data.length;
 
-        if (len > 0){
-            data[0] = (short) 0;
+        if (len > 0) {
+            data[0] = 0;
         }
 
         //Value of i will be [1, 2, 4, 8, 16, 32, ..., len]
         for (int i = 1; i < len; i += i) {
-            System.arraycopy(data, 0, data, i, Math.min((len - i), i));
+            System.arraycopy(data, 0, data, i, Math.min(len - i, i));
         }
         return data;
     }
-
 }
