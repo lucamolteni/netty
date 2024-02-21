@@ -43,7 +43,7 @@ import java.util.Random;
 @Measurement(iterations = 5)
 public class SnappyDirectBenchmark extends AbstractMicrobenchmark {
 
-    @Param({"FAST_THREAD_LOCAL_ARRAY_FILL", "NEW_ARRAY"})
+    @Param({"FAST_THREAD_LOCAL_ARRAY_FILL", "FAST_THREAD_LOCAL_ARRAY_FILL_OLD", "NEW_ARRAY"})
     public Snappy.HashType hashType;
     private ByteBuf buffer;
     private Snappy snappy;
