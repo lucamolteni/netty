@@ -21,6 +21,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.handler.codec.compression.Snappy;
 import io.netty.microbench.util.AbstractMicrobenchmark;
+import org.openjdk.jmh.annotations.AuxCounters;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
@@ -34,39 +35,67 @@ import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Random;
+import java.util.Arrays;
 
 @State(Scope.Benchmark)
 @Fork(1)
 @Threads(1)
-@Warmup(iterations = 5)
-@Measurement(iterations = 5)
+@Warmup(iterations = 2)
+@Measurement(iterations = 2)
 public class SnappyDirectBenchmark extends AbstractMicrobenchmark {
 
-    @Param({"FAST_THREAD_LOCAL_ARRAY_FILL", "FAST_THREAD_LOCAL_ARRAY_FILL_OLD", "NEW_ARRAY"})
+    @Param()
     public Snappy.HashType hashType;
     private ByteBuf buffer;
     private Snappy snappy;
     private ByteBuf in;
     private ByteBuf out;
 
-    @Setup(Level.Iteration)
+    @Param({"16383", "1024", "128"})
+    private int bufferSizeInBytes;
+
+    @AuxCounters
+    @State(Scope.Thread)
+    public static class AllocationMetrics {
+        public long fillBytes;
+
+        public long compressedOutputSize;
+
+        public long encodeCount;
+    }
+
+    @Setup
     public void setup() throws UnsupportedEncodingException {
         ByteBufAllocator allocator = UnpooledByteBufAllocator.DEFAULT;
-        int bufferSizeInBytes = 16383; // 100 bytes
         buffer = allocator.buffer(bufferSizeInBytes);
 
         snappy = new Snappy();
         snappy.setHashType(hashType);
 
-        Random random = new Random(5323211032315942961L);
-        byte[] randomBytes = new byte[buffer.writableBytes()];
-        random.nextBytes(randomBytes);
-        buffer.writeBytes(randomBytes);
+//        Random random = new Random(5323211032315942961L);
+        byte[] pseudoRandomBytes = new byte[buffer.writableBytes()];
+//        random.nextBytes(randomBytes);
+        Arrays.fill(pseudoRandomBytes, (byte) 1);
+        buffer.writeBytes(pseudoRandomBytes);
 
-        in = Unpooled.wrappedBuffer(randomBytes);
-        out = Unpooled.buffer();
+        in = Unpooled.wrappedBuffer(pseudoRandomBytes);
+        out = Unpooled.directBuffer();
     }
+
+    @Benchmark
+    public ByteBuf encode(AllocationMetrics allocationMetrics) {
+        // Make it run inside a FastThread
+        int length = in.readableBytes();
+        snappy.encode(in, out, length);
+        allocationMetrics.fillBytes = snappy.allocatedBytes;
+        in.resetReaderIndex();
+        allocationMetrics.compressedOutputSize += out.readableBytes();
+        out.setIndex(0, 0);
+
+        allocationMetrics.encodeCount++;
+        return out;
+    }
+
 
     @TearDown(Level.Trial)
     public void teardown() {
@@ -74,12 +103,5 @@ public class SnappyDirectBenchmark extends AbstractMicrobenchmark {
         buffer = null;
         out.release();
         out = null;
-    }
-
-    @Benchmark
-    public ByteBuf encode() {
-        // Make it run inside a FastThread
-        snappy.encode(in, out, in.readableBytes());
-        return out;
     }
 }
