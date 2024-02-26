@@ -50,10 +50,11 @@ public final class Snappy {
     private byte tag;
     private int written;
 
+    public long allocatedBytes;
+
     public enum HashType {
         NEW_ARRAY,
-        FAST_THREAD_LOCAL_ARRAY_FILL,
-        FAST_THREAD_LOCAL_ARRAY_FILL_OLD
+        FAST_THREAD_LOCAL_ARRAY_FILL
     }
 
     private enum State {
@@ -94,14 +95,12 @@ public final class Snappy {
             case FAST_THREAD_LOCAL_ARRAY_FILL:
                 hashTableSize = Math.min(MathUtil.findNextPositivePowerOfTwo(length), MAX_HT_SIZE);
                 table = getHashTableFastThreadLocalArrayFill(hashTableSize);
-                break;
-            case FAST_THREAD_LOCAL_ARRAY_FILL_OLD:
-                table = getHashTableFastThreadLocalArrayFillOld(length);
-                hashTableSize = table.length;
+                allocatedBytes += hashTableSize;
                 break;
             case NEW_ARRAY:
                 table = getHashTableNewArray(length);
                 hashTableSize = table.length;
+                allocatedBytes += hashTableSize;
                 break;
             default:
                 throw new RuntimeException("Need hash table type");
@@ -207,31 +206,13 @@ public final class Snappy {
      */
     public static short[] getHashTableFastThreadLocalArrayFill(int hashTableSize) {
         short[] hashTable = HASH_TABLE.get();
-        if (hashTable == null) {
-            hashTable = new short[MAX_HT_SIZE];
+        if (hashTable == null || hashTable.length < hashTableSize) {
+            hashTable = new short[hashTableSize];
             HASH_TABLE.set(hashTable);
-            System.out.println("hashTableSize: " + hashTableSize + " hashTable: " + hashTable.length);
+            return hashTable;
         }
 
         Arrays.fill(hashTable, 0, hashTableSize, (short) 0);
-        return hashTable;
-    }
-
-    /**
-     * Creates an appropriately sized hashtable for the given input size
-     *
-     * @param inputSize The size of our input, ie. the number of bytes we need to encode
-     * @return An appropriately sized empty hashtable
-     */
-    public static short[] getHashTableFastThreadLocalArrayFillOld(int inputSize) {
-        short[] hashTable = HASH_TABLE.get();
-        if (hashTable == null) {
-            int hashTableSize = MathUtil.findNextPositivePowerOfTwo(inputSize);
-            hashTable = new short[Math.min(hashTableSize, MAX_HT_SIZE)];
-            HASH_TABLE.set(hashTable);
-        }
-        // reset byte array with 0
-        Arrays.fill(hashTable, (short) 0);
         return hashTable;
     }
 
