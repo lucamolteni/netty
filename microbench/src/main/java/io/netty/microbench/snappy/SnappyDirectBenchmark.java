@@ -40,8 +40,8 @@ import java.util.Arrays;
 @State(Scope.Benchmark)
 @Fork(1)
 @Threads(1)
-@Warmup(iterations = 2)
-@Measurement(iterations = 2)
+@Warmup(iterations = 5)
+@Measurement(iterations = 3)
 public class SnappyDirectBenchmark extends AbstractMicrobenchmark {
 
     @Param()
@@ -51,7 +51,7 @@ public class SnappyDirectBenchmark extends AbstractMicrobenchmark {
     private ByteBuf in;
     private ByteBuf out;
 
-    @Param({"16383", "1024", "128"})
+    @Param({"4096", "2048", "1024", "512", "256", "128"})
     private int bufferSizeInBytes;
 
     @AuxCounters
@@ -62,6 +62,13 @@ public class SnappyDirectBenchmark extends AbstractMicrobenchmark {
         public long compressedOutputSize;
 
         public long encodeCount;
+
+        @TearDown
+        public void printStats() {
+            long compressRatio = compressedOutputSize / encodeCount;
+
+            System.out.println("Compression ratio: " + compressRatio + " bytes per encode");
+        }
     }
 
     @Setup
@@ -95,7 +102,6 @@ public class SnappyDirectBenchmark extends AbstractMicrobenchmark {
         allocationMetrics.encodeCount++;
         return out;
     }
-
 
     @TearDown(Level.Trial)
     public void teardown() {
